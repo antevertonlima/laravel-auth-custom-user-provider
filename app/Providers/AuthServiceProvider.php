@@ -25,6 +25,8 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Auth::provider('custom_auth', function($app, array $config) {
+            return new CustomAuthServiceProvider();
+        });
     }
 }
