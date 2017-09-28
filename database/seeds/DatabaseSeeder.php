@@ -17,6 +17,17 @@ class DatabaseSeeder extends Seeder
         DB::table('pessoas')->truncate();
     	DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     	
+        factory(\App\User::class,1)->create([
+            'user_name' => 'caue.prado',
+            'password' => bcrypt('secret'),
+            'pessoa_id' => (factory(App\Pessoa::class, 1)->create([
+                'nome' => 'Caue',
+                'sobrenome' => 'Prado',
+                'cpf' => '07606497907',
+                'email' => 'caue.prado0@gmail.com',
+            ]))[0]->id,
+        ]);
+
         for ($i = 0; $i < 20; $i++) {
         	$pessoa = factory(App\Pessoa::class, 1)->create();
 
