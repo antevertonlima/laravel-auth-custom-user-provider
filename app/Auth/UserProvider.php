@@ -10,78 +10,21 @@ namespace App\Auth;
 
 
 use Illuminate\Auth\EloquentUserProvider;
+use Illuminate\Support\Str;
 use Illuminate\Contracts\Auth\Authenticatable as UserContract;
+use App\Pessoa;
+use Validator; 
 
 class UserProvider extends EloquentUserProvider
 {
-    /**
-     * Retrieve a user by their unique identifier.
-     *
-     * @param  mixed  $identifier
-     * @return \Illuminate\Contracts\Auth\Authenticatable|null
-     */
-    public function retrieveById($identifier)
-    {
-        $model = $this->createModel();
-
-        return $model->newQuery()
-            ->where($model->getAuthIdentifierName(), $identifier)
-            ->first();
-    }
-
-    /**
-     * Retrieve a user by their unique identifier and "remember me" token.
-     *
-     * @param  mixed  $identifier
-     * @param  string  $token
-     * @return \Illuminate\Contracts\Auth\Authenticatable|null
-     */
-    public function retrieveByToken($identifier, $token)
-    {
-        $model = $this->createModel();
-
-        $model = $model->where($model->getAuthIdentifierName(), $identifier)->first();
-
-        if (! $model) {
-            return null;
-        }
-
-        $rememberToken = $model->getRememberToken();
-
-        return $rememberToken && hash_equals($rememberToken, $token) ? $model : null;
-    }
-
-    /**
-     * Update the "remember me" token for the given user in storage.
-     *
-     * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
-     * @param  string  $token
-     * @return void
-     */
-    public function updateRememberToken(UserContract $user, $token)
-    {
-        $user->setRememberToken($token);
-
-        $timestamps = $user->timestamps;
-
-        $user->timestamps = false;
-
-        $user->save();
-
-        $user->timestamps = $timestamps;
-    }
-
-    /**
-     * Retrieve a user by the given credentials.
-     *
-     * @param  array  $credentials
-     * @return \Illuminate\Contracts\Auth\Authenticatable|null
-     */
+    
     public function retrieveByCredentials(array $credentials)
     {
         if (empty($credentials)) {
             return;
         }
+
+        $credentials["user_name"] = $this->userNameKey($credentials["user_name"]);
 
         // First we will add each credential element to the query as a where clause.
         // Then we can execute the query and, if we found a user, return it in a
@@ -97,17 +40,48 @@ class UserProvider extends EloquentUserProvider
         return $query->first();
     }
 
-    /**
-     * Validate a user against the given credentials.
-     *
-     * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
-     * @param  array  $credentials
-     * @return bool
-     */
-    public function validateCredentials(UserContract $user, array $credentials)
+    protected function userNameKey($userNameValue)
     {
-        $plain = $credentials['password'];
+        if($this->validateCpf($userNameValue))
+        {
+            return $this->getUserIdByPessoa('cpf', preg_replace('/[^0-9]/', '', $userNameValue));
+        }
+        else if($this->validateEmail($userNameValue))
+        {
+            return $this->getUserIdByPessoa('email', $userNameValue);
+        }
+        else
+        {
+            return $userNameValue;
+        }
+    }
 
-        return $this->hasher->check($plain, $user->getAuthPassword());
+    protected function validateCpf($value)
+    {
+        $validator = Validator::make([
+            'user_name' => $value
+        ], 
+        [
+            'user_name' => 'cpf'
+        ]);
+
+        return (!$validator->fails());
+    }
+
+    protected function validateEmail($value)
+    {
+        $validator = Validator::make([
+            'user_name' => $value
+        ], 
+        [
+            'user_name' => 'email'
+        ]);
+        
+        return (!$validator->fails());
+    }
+
+    protected function getUserIdByPessoa($field, $value)
+    {
+        return Pessoa::where($field, '=', $value)->first()? Pessoa::where($field, '=', $value)->first()->user->user_name: null;
     }
 }

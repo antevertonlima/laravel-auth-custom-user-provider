@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Auth\UserProvider;
 use Illuminate\Support\ServiceProvider;
+use Code\Validator\Cpf;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +15,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        \Validator::extend('cpf', function($attribute, $value, $parameters, $validator){
+            return (new Cpf())->isValid($value);
+        });
     }
 
     /**
