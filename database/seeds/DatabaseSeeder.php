@@ -17,13 +17,14 @@ class DatabaseSeeder extends Seeder
         DB::table('pessoas')->truncate();
     	DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     	
+        //ATENCAO CPF ALEATORIO!!
         factory(\App\User::class,1)->create([
             'user_name' => 'caue.prado',
             'password' => bcrypt('secret'),
             'pessoa_id' => (factory(App\Pessoa::class, 1)->create([
                 'nome' => 'Caue',
                 'sobrenome' => 'Prado',
-                'cpf' => '07606497907',
+                'cpf' => '61112330097',
                 'email' => 'caue.prado0@gmail.com',
             ]))[0]->id,
         ]);
