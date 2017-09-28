@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        Auth::provider('custom_auth', function($app, array $config) {
+        \Auth::provider('custom_auth', function($app, array $config) {
             return new UserProvider($app['hash'], $config['model']);
         });
     }
